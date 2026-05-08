@@ -1,0 +1,16 @@
+# Core Azure Functions
+azure-functions>=1.17.0
+
+# Azure Identity & ADF SDK
+azure-identity>=1.15.0
+azure-common>=1.1.28
+azure-mgmt-datafactory>=4.0.0
+
+# Database
+pyodbc>=5.1.0
+
+# Data handling
+pandas>=2.0.0
+
+# HTTP requests
+requests>=2.31.0
