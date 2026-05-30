@@ -9,7 +9,7 @@
               * Long jobs (>4h): flagged if exceeds 115% of estimated
    
    Combines live data (jobRuns) with historical data (JobRunsHistory)
-   for 7-day reporting window.
+   for reporting.
    ============================================================ */
 
 SET ANSI_NULLS ON
@@ -74,7 +74,7 @@ LEFT JOIN [jobmonitoring].[VwRptJobsMaster] AS JM WITH (NOLOCK) ON JR.JobId = TR
 
 UNION ALL
 
--- === Section 2: HISTORICAL Data (7-day window) ===
+-- === Section 2: HISTORICAL Data ===
 SELECT
     TRIM(JR_Hist.JobId),
     JR_Hist.JobRunId,

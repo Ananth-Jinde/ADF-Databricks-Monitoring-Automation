@@ -2,7 +2,7 @@
    View: [jobmonitoring].[VwRptJobsFailureLogs]
    Purpose: Power BI Dashboard source — failure details with IST
             time conversion. Combines live failures (failureLogs)
-            with historical failures (JobRunsHistory) for 7-day
+             with historical failures (JobRunsHistory) for
             failure trending and analysis.
    ============================================================ */
 
@@ -40,7 +40,7 @@ FROM [jobmonitoring].[failureLogs] WITH (NOLOCK)
 
 UNION ALL
 
--- === Section 2: HISTORICAL Failures (7-day window) ===
+-- === Section 2: HISTORICAL Failures ===
 SELECT
     TRIM(JobId),
     JobRunId,

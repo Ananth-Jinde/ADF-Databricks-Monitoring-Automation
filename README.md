@@ -8,7 +8,19 @@
 
 ## 📋 Overview
 
-This system automates the monitoring of **150+ ADF pipelines** and **45+ Databricks jobs** across **30 data products**, eliminating approximately **25 hours/week** of manual monitoring effort for a team of 25 engineers.
+This system automates the monitoring of **ADF pipelines** and **Databricks jobs** across multiple data products, providing real-time failure detection, automated alerting, and incident management. The architecture is fully config-driven — adding a new pipeline or job requires a single INSERT statement in the master table, making it horizontally scalable to any number of pipelines, jobs, and data products without code changes.
+
+### Scalability & Effort Savings
+
+The automation's impact scales linearly with the number of monitored jobs. Here's an example:
+
+| Scenario | Pipelines & Jobs | Team Size | Manual Effort Replaced |
+|----------|-----------------|-----------|----------------------|
+| Small team | 50 pipelines, 15 Databricks jobs | 10 engineers | ~8–10 hours/week |
+| Medium team | 150 pipelines, 45 Databricks jobs | 25 engineers | ~20–25 hours/week |
+| Large team | 500 pipelines, 100 Databricks jobs | 50 engineers | ~60–75 hours/week |
+
+**How the estimate works**: Each pipeline/job requires ~2–3 minutes of manual status checking per day (opening the portal, navigating to the run, checking status, noting failures). With 200 scheduled executions daily, that's ~400–600 minutes (~7–10 hours) of checking alone. Add failure triage (~30 min/day), incident creation (~15 min/day), status reporting (~20 min/day), and re-trigger follow-up (ongoing) — the total effort becomes substantial. This automation reduces all of it to zero manual effort.
 
 ### What It Does
 
@@ -19,7 +31,7 @@ This system automates the monitoring of **150+ ADF pipelines** and **45+ Databri
 | **Incident Management** | Automatically creates ServiceNow incidents with smart deduplication (one per pipeline per day) |
 | **Self-Healing Dashboard** | Rechecks failed jobs every 15 minutes — auto-corrects status when manual re-triggers succeed |
 | **Long-Running Detection** | Tiered threshold algorithm flags jobs exceeding expected duration |
-| **Centralized Dashboard** | SQL views powering a Power BI dashboard with real-time status, failure logs, and 7-day historical trends |
+| **Centralized Dashboard** | SQL views powering a Power BI dashboard with real-time status (current + previous day) and failure logs |
 
 ---
 
@@ -31,12 +43,12 @@ The system follows an event-driven, serverless architecture deployed entirely on
 ┌──────────────────┐     REST API      ┌───────────────────────┐     HTTP POST     ┌─────────────────┐
 │  Azure Data      │◄─────────────────►│  Azure Functions      │─────────────────►│  Azure Logic App │
 │  Factory         │                   │  (Python, Timer)      │                   │  → Teams Alerts  │
-│  150+ Pipelines  │                   │                       │                   └─────────────────┘
+│  ADF Pipelines   │                   │                       │                   └─────────────────┘
 └──────────────────┘                   │  ┌─────────────────┐  │     REST API     ┌─────────────────┐
                                        │  │ ADF Monitor     │  │─────────────────►│  ServiceNow     │
 ┌──────────────────┐     REST API      │  │ (every 5 min)   │  │                   │  Auto Incidents  │
 │  Databricks      │◄─────────────────►│  ├─────────────────┤  │                   └─────────────────┘
-│  45+ Jobs        │                   │  │ DB Monitor      │  │
+│  Databricks Jobs │                   │  │ DB Monitor      │  │
 └──────────────────┘                   │  │ (every 5 min)   │  │     ODBC        ┌─────────────────┐
                                        │  ├─────────────────┤  │─────────────────►│  Azure SQL DB   │
                                        │  │ Recheck Monitor │  │                   │  jobmonitoring   │
@@ -142,7 +154,7 @@ Job-Monitoring-Automation/
 | `jobsMaster` | Databricks job registration — job ID, workspace, schedule |
 | `DataProductConfig` | Product metadata — POC name, assignee ID, CMDB CI for incident routing |
 | `jobRuns` | Current day's run records (status, timestamps, run URLs) |
-| `JobRunsHistory` | Historical run data for 7-day Power BI trends |
+| `JobRunsHistory` | Historical run data for Power BI trending |
 | `failureLogs` | Active failure records (auto-deleted when re-trigger succeeds) |
 | `incident_log` | ServiceNow incident deduplication (one per pipeline per day) |
 | `databricks_alert_log` | Databricks Teams alert deduplication (one per run_id) |
@@ -156,7 +168,7 @@ Job-Monitoring-Automation/
 | `vw_DatabricksJobSchedules` | Scheduling logic — which Databricks jobs need polling now (30-min window) |
 | `VwRptJobsMaster` | Dashboard — unified master combining ADF + Databricks |
 | `VwRptJobsRuns` | Dashboard — all runs with IST conversion + long-running flags |
-| `VwRptJobsFailureLogs` | Dashboard — failure details for 7-day trending |
+| `VwRptJobsFailureLogs` | Dashboard — failure details for trending |
 | `VwRptJobsStatus` | Dashboard — status dimension for Power BI filters |
 
 ### Stored Procedures

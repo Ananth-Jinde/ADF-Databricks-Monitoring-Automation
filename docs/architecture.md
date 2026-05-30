@@ -11,13 +11,13 @@ The Job Monitoring Automation system follows a **serverless, event-driven archit
 ## 1. Data Pipeline Layer (Monitored Systems)
 
 ### Azure Data Factory (ADF)
-- **150+ pipelines** across multiple data factories and subscriptions
+- ADF pipelines across multiple data factories and subscriptions
 - Pipelines orchestrate data movement and transformation
 - Many ADF pipelines use Execute Pipeline activities that make REST API calls to Databricks jobs
 - Monitored via the **ADF Management SDK** (`azure.mgmt.datafactory`)
 
 ### Databricks
-- **45+ jobs** across multiple workspaces
+- Databricks jobs across multiple workspaces
 - Jobs handle compute-heavy data processing and transformations
 - Monitored via the **Databricks REST API 2.1** (`/api/2.1/jobs/runs/list` and `/api/2.1/jobs/runs/get`)
 
@@ -75,7 +75,7 @@ All monitoring data is stored in the `jobmonitoring` schema:
          ▼                            ▼
 ┌─────────────────┐      ┌────────────────────────┐
 │  failureLogs    │      │  JobRunsHistory        │
-│  (Active Fails) │      │  (7-day Archive)       │
+│  (Active Fails) │      │  (Archive)             │
 └─────────────────┘      └────────────────────────┘
 ```
 
@@ -122,7 +122,7 @@ The Power BI dashboard connects to SQL Server via **DirectQuery** for real-time 
 - **Data Product Filter**: Drill down by data product
 - **Long Running Jobs Panel**: Highlights jobs exceeding expected duration
 - **Job Detail Table**: Full run details with run page URLs for direct navigation
-- **Historical Trends**: 7-day failure and run history
+- **Historical Trends**: Failure and run history
 
 ---
 

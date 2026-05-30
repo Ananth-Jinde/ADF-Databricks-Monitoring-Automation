@@ -241,24 +241,31 @@ def databaseUpdater(jobs, error_message: str, schedule: str, Data_factory: str,
 
     incident_number = None
 
-    if status == 'Failed':
-        try:
-            incident_number = create_servicenow_incident(
-                Instance,
-                pipeline_name,
-                error_message.replace("''", "'"),
-                urgency="3",
-                impact="3",
-                run_url=RunPageURL
-            )
-        except Exception as e:
-            logging.error(f"[ERROR] ServiceNow incident creation failed for {pipeline_name}: {e}")
-
     conn = None
     cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+ 
+        if status == 'Failed':
+            check_query = "SELECT 1 FROM [jobmonitoring].[jobRuns] WHERE JobRunId = ? AND Status = 'FAILURE'"
+            cursor.execute(check_query, JobRunId)
+            already_failed = cursor.fetchone()
+ 
+            if already_failed:
+                logging.info(f"RunId {JobRunId} already logged as Failed for {pipeline_name}. Skipping incident creation and alert.")
+            else:
+                try:
+                    incident_number = create_servicenow_incident(
+                        Instance,
+                        pipeline_name,
+                        error_message.replace("''", "'"),
+                        urgency="3",
+                        impact="3",
+                        run_url=RunPageURL
+                    )
+                except Exception as e:
+                    logging.error(f"[ERROR] ServiceNow incident creation failed for {pipeline_name}: {e}")
 
         # Use parameter binding for safety and correctness
         query = """
